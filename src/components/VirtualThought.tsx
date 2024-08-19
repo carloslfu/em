@@ -127,8 +127,11 @@ const VirtualThought = ({
     const autofocusNew = calculateAutofocus(store.getState(), path)
     const isVisibleNew = autofocusNew === 'show' || autofocusNew === 'dim'
     if (!ref.current) return
-    const heightNew = ref.current.getBoundingClientRect().height
-    const widthNew = ref.current.querySelector('.editable')?.getBoundingClientRect().width
+    // const start = performance.now()
+    const heightNew = 40 // ref.current.getBoundingClienxstRect().height
+    const widthNew = 300 // ref.current.querySelector('.editable')?.getBoundingClientRect().width
+    // const end = performance.now()
+    // console.info(`Time to measure dimensions: ${end - start}ms`)
 
     // skip updating height when preventAutoscroll is enabled, as it modifies the element's height in order to trick Safari into not scrolling
     const editable = ref.current.querySelector('.editable')

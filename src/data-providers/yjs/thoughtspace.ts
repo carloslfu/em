@@ -438,6 +438,7 @@ export const init = async (options: ThoughtspaceOptions) => {
 /** Updates a yjs thought doc. Converts childrenMap to a nested Y.Map for proper children merging. Resolves when transaction is committed and IDB is synced (not when websocket is synced). */
 // NOTE: Ids are added to the thought log in updateThoughts for efficiency. If updateThought is ever called outside of updateThoughts, we will need to push individual thought ids here.
 export const updateThought = async (id: ThoughtId, thought: Thought): Promise<void> => {
+  return Promise.resolve()
   let docKey = docKeys.get(id)
   let lexemeOldIDBSynced: Promise<unknown> | undefined
   let thoughtOldIDBSynced: Promise<unknown> | undefined
@@ -454,13 +455,13 @@ export const updateThought = async (id: ThoughtId, thought: Thought): Promise<vo
       }
 
       // delete from old parent
-      const thoughtDocOld = thoughtDocs.get(docKey)
-      thoughtDocOld?.transact(() => {
-        const yChildren = thoughtDocOld.getMap<Y.Map<ThoughtYjs>>('children')
-        yChildren.delete(id)
-        docKey = thought.parentId
-        docKeys.set(id, docKey)
-      }, thoughtDocOld.clientID)
+      // const thoughtDocOld = thoughtDocs.get(docKey)
+      // thoughtDocOld?.transact(() => {
+      //   const yChildren = thoughtDocOld.getMap<Y.Map<ThoughtYjs>>('children')
+      //   yChildren.delete(id)
+      //   docKey = thought.parentId
+      //   docKeys.set(id, docKey)
+      // }, thoughtDocOld.clientID)
 
       // subscribe to thoughtPersistence directly since thoughtIDBSynced can await websocketSynced on new devices
       thoughtOldIDBSynced = thoughtPersistence.get(docKey)?.whenSynced
@@ -485,11 +486,11 @@ export const updateThought = async (id: ThoughtId, thought: Thought): Promise<vo
 
   // Get the thought Doc if it has been cached, or initiate a replication.
   // Do not wait for thought to full replicate.
-  const thoughtDoc =
-    thoughtDocs.get(docKey) ||
-    (await new Promise<Y.Doc>(resolve => {
-      replicateThought(id, { onDoc: resolve })
-    }))
+  // const thoughtDoc =
+  //   thoughtDocs.get(docKey) ||
+  //   (await new Promise<Y.Doc>(resolve => {
+  //     replicateThought(id, { onDoc: resolve })
+  //   }))
 
   // subscribe to thoughtPersistence directly since thoughtIDBSynced can await websocketSynced on new devices
   const thoughtNewIdbSynced = thoughtPersistence.get(docKey)?.whenSynced.catch(e => {
@@ -506,60 +507,60 @@ export const updateThought = async (id: ThoughtId, thought: Thought): Promise<vo
     })
   })
 
-  thoughtDoc.transact(() => {
-    // Set parent docKey directly on the thought Doc.
-    // This is needed to traverse up the ancestor path of tangential contexts.
-    const yThought = thoughtDoc.getMap<ThoughtId | null>('thought')
-    const parentDocKey =
-      thought.parentId === ROOT_PARENT_ID ? null : (docKeys.get(thought.parentId) as ThoughtId | undefined)
-    if (parentDocKey === undefined) {
-      throw new Error(`updateThought: Missing docKey for parent ${thought.parentId} of thought ${id}`)
-    }
-    yThought.set('docKey', parentDocKey)
+  // thoughtDoc.transact(() => {
+  //   // Set parent docKey directly on the thought Doc.
+  //   // This is needed to traverse up the ancestor path of tangential contexts.
+  //   const yThought = thoughtDoc.getMap<ThoughtId | null>('thought')
+  //   const parentDocKey =
+  //     thought.parentId === ROOT_PARENT_ID ? null : (docKeys.get(thought.parentId) as ThoughtId | undefined)
+  //   if (parentDocKey === undefined) {
+  //     throw new Error(`updateThought: Missing docKey for parent ${thought.parentId} of thought ${id}`)
+  //   }
+  //   yThought.set('docKey', parentDocKey)
 
-    const yChildren = thoughtDoc.getMap<Y.Map<ThoughtYjs>>('children')
-    if (!yChildren.has(id)) {
-      yChildren.set(id, new Y.Map<ThoughtYjs>())
-    }
-    const thoughtMap = yChildren.get(id)!
-    const thoughtDb = thoughtToDb(thought)
-    ;(Object.keys(thoughtDb) as (keyof ThoughtDb)[]).forEach(key => {
-      // merge childrenMap Y.Map
-      if (key === thoughtKeyToDb.childrenMap) {
-        const value = thoughtDb[key]
-        let childrenMap = thoughtMap.get('childrenMap') as Y.Map<ThoughtId>
+  //   const yChildren = thoughtDoc.getMap<Y.Map<ThoughtYjs>>('children')
+  //   if (!yChildren.has(id)) {
+  //     yChildren.set(id, new Y.Map<ThoughtYjs>())
+  //   }
+  //   const thoughtMap = yChildren.get(id)!
+  //   const thoughtDb = thoughtToDb(thought)
+  //   ;(Object.keys(thoughtDb) as (keyof ThoughtDb)[]).forEach(key => {
+  //     // merge childrenMap Y.Map
+  //     if (key === thoughtKeyToDb.childrenMap) {
+  //       const value = thoughtDb[key]
+  //       let childrenMap = thoughtMap.get('childrenMap') as Y.Map<ThoughtId>
 
-        // create new Y.Map for new thought
-        if (!childrenMap) {
-          childrenMap = new Y.Map()
-          thoughtMap.set(thoughtKeyToDb.childrenMap, childrenMap)
-        }
+  //       // create new Y.Map for new thought
+  //       if (!childrenMap) {
+  //         childrenMap = new Y.Map()
+  //         thoughtMap.set(thoughtKeyToDb.childrenMap, childrenMap)
+  //       }
 
-        // delete children from the yjs thought that are no longer in the state thought
-        childrenMap.forEach((childKey: string, childId: string) => {
-          if (!value[childId]) {
-            childrenMap.delete(childId)
-          }
-        })
+  //       // delete children from the yjs thought that are no longer in the state thought
+  //       childrenMap.forEach((childKey: string, childId: string) => {
+  //         if (!value[childId]) {
+  //           childrenMap.delete(childId)
+  //         }
+  //       })
 
-        // add children that are not in the yjs thought
-        Object.entries(thoughtDb[thoughtKeyToDb.childrenMap]).forEach(([key, childId]) => {
-          if (!childrenMap.has(key)) {
-            childrenMap.set(key, childId)
-          }
-        })
-      }
-      // other keys
-      else {
-        const value = thoughtDb[key]
-        // Only set a value if it has changed.
-        // Otherwise YJS adds another update.
-        if (value !== thoughtMap.get(key)) {
-          thoughtMap.set(key, value)
-        }
-      }
-    })
-  }, thoughtDoc.clientID)
+  //       // add children that are not in the yjs thought
+  //       Object.entries(thoughtDb[thoughtKeyToDb.childrenMap]).forEach(([key, childId]) => {
+  //         if (!childrenMap.has(key)) {
+  //           childrenMap.set(key, childId)
+  //         }
+  //       })
+  //     }
+  //     // other keys
+  //     else {
+  //       const value = thoughtDb[key]
+  //       // Only set a value if it has changed.
+  //       // Otherwise YJS adds another update.
+  //       if (value !== thoughtMap.get(key)) {
+  //         thoughtMap.set(key, value)
+  //       }
+  //     }
+  //   })
+  // }, thoughtDoc.clientID)
 
   await Promise.all([thoughtNewIdbSynced, thoughtOldIDBSynced, lexemeOldIDBSynced])
 }
@@ -1321,6 +1322,7 @@ export const updateThoughts = async ({
   lexemeIndexUpdatesOld: Index<Lexeme | undefined>
   schemaVersion: number
 }) => {
+  return Promise.resolve()
   const { replication, updateQueue } = await config
 
   // group thought updates and deletes so that we can use the db bulk functions
