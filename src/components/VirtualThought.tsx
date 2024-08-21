@@ -1,3 +1,4 @@
+import { isEqual } from 'lodash'
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { shallowEqual, useSelector } from 'react-redux'
 import LazyEnv from '../@types/LazyEnv'
@@ -235,7 +236,8 @@ const VirtualThought = ({
   )
 }
 
-const VirtualThoughtMemo = React.memo(VirtualThought)
+const VirtualThoughtMemo = React.memo(VirtualThought, (prevProps, nextProps) => isEqual(prevProps, nextProps))
+
 VirtualThoughtMemo.displayName = 'VirtualThought'
 
 export default VirtualThoughtMemo
