@@ -129,11 +129,12 @@ const VirtualThought = ({
     if (!ref.current) return
 
     // Need to grab max height between .thought and .thought-annotation since the annotation height might be bigger (due to wrapping link icon).
-    const heightNew = Math.max(
-      ref.current.getBoundingClientRect().height,
-      ref.current.querySelector('[aria-label="thought-annotation"]')?.getBoundingClientRect().height || 0,
-    )
-    const widthNew = ref.current.querySelector('.editable')?.getBoundingClientRect().width
+    // const heightNew = Math.max(
+    //   ref.current.getBoundingClientRect().height,
+    //   ref.current.querySelector('[aria-label="thought-annotation"]')?.getBoundingClientRect().height || 0,
+    // )
+    const heightNew = 35
+    const widthNew = 200 //ref.current.querySelector('.editable')?.getBoundingClientRect().width
 
     // skip updating height when preventAutoscroll is enabled, as it modifies the element's height in order to trick Safari into not scrolling
     const editable = ref.current.querySelector('.editable')

@@ -20,7 +20,7 @@ import isURL from '../util/isURL'
 import keyValueBy from '../util/keyValueBy'
 import parentOf from '../util/parentOf'
 import publishMode from '../util/publishMode'
-import strip from '../util/strip'
+// import strip from '../util/strip'
 import unroot from '../util/unroot'
 import childIdsToThoughts from './childIdsToThoughts'
 import { anyChild, getAllChildrenAsThoughts } from './getChildren'
@@ -108,7 +108,7 @@ function expandThoughtsRecursive(state: State, expansionBasePath: Path, path: Pa
   const visibleChildren = state.showHiddenThoughts
     ? childrenUnfiltered
     : childrenUnfiltered.filter(child => {
-        const value = strip(child.value)
+        const value = child.value
         const childPath = unroot([...path, child.id])
 
         /** Check of the path is the ancestor of the expansion path. */
@@ -162,7 +162,7 @@ function expandThoughtsRecursive(state: State, expansionBasePath: Path, path: Pa
             isHiddenAttribute() ||
             pinned(state, child.id) ||
             (childrenPinned(state, thoughtId) && pinned(state, child.id) === null) ||
-            strip(child.value).endsWith(EXPAND_THOUGHT_CHAR)
+            child.value.endsWith(EXPAND_THOUGHT_CHAR)
           )
         })
 

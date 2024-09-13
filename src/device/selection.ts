@@ -52,7 +52,7 @@ export const clear = (): void => {
 export const isCollapsed = (): boolean => !!window.getSelection()?.isCollapsed
 
 /** Returns true if there is an active selection. */
-export const isActive = (): boolean => !!window.getSelection()?.focusNode
+export const isActive = (): boolean => false // !!window.getSelection()?.focusNode
 
 /** Returns true if the Node is an editable. */
 const isEditable = (node?: Node | null) =>
